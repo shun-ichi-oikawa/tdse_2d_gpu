@@ -1,12 +1,15 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software in your research, please cite it using the metadata below."
 title: "tdse_2d_gpu: 2D Time-Dependent Schrödinger Equation GPU Solver for Cyclotron Motion under Arbitrary Perturbations"
-version: 1.0.0
+version: "1.0.0"
 date-released: 2026-11-21
+type: software
 authors:
   - family-names: "Oikawa"
     given-names: "Shun-ichi"
     affiliation: "Faculty of Engineering, Hokkaido University, Sapporo 060-8628, Japan"
     orcid: "https://orcid.org"
+    email: "lopia312oikawa@gmail.com"
 repository-code: "https://github.com"
+doi: "10.5281/zenodo.24416581"
 license: GPL-3.0
