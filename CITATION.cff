@@ -6,9 +6,9 @@ authors:
   - family-names: "Oikawa"
     given-names: "Shun-ichi"
     affiliation: "Faculty of Engineering, Hokkaido University, Sapporo 060-8628, Japan"
-    orcid: "https://orcid.org0009-0001-5603-2787"
+    orcid: "https://orcid.org"
     email: "lopia312oikawa@gmail.com"
-repository-code: "https://github.comshun-ichi-oikawa/tdse_2d_gpu"
+repository-code: "https://github.com"
 license: GPL-3.0
 keywords:
   - time-dependent Schrödinger equation
@@ -23,7 +23,7 @@ preferred-citation:
     - family-names: "Oikawa"
       given-names: "Shun-ichi"
       affiliation: "Faculty of Engineering, Hokkaido University, Sapporo 060-8628, Japan"
-      orcid: "https://orcid.org0009-0001-5603-2787"
+      orcid: "https://orcid.org"
   title: "Generalization of Quantum-Mechanical Equation Structures for Cyclotron Motion under Arbitrary Perturbations"
   journal: "Journal of Mathematical Physics"
   publisher:
