@@ -101,10 +101,15 @@ make clean
    ./sch_ufm    # Unperturbed uniform magnetic field reference run
    ./sch_fp     # Field-particle perturbation run
    ```
-   *(Note: Because `sch` and `sch_ufm` write to separate files and directories, they can be executed concurrently on multi-GPU or shared systems without file collisions.)*
+   *(Note: Both `sch` and `sch_fp` write to `000.dat`, `OUT/`, and `SAVE/`, whereas `sch_ufm` writes to `000.ufm`, `out/`, and `save/`. Therefore, `sch_ufm` can be executed concurrently with either `sch` or `sch_fp` without file collisions, while `sch` and `sch_fp` should not be run simultaneously in the same directory.)*
 
 3. **Graceful Interruption**:
-   To stop a running job cleanly after the next density output step (`N_rec_rho`), create an empty file named `interruption` inside `SAVE/` (or `save/` for `sch_ufm`):
+   To stop a running job cleanly after the next density output step (`N_rec_rho`), create an empty file named `interruption` inside `SAVE/` (for `sch` and `sch_fp`) or `save/` (for `sch_ufm`):
+   ```bash
+   touch SAVE/interruption   # For sch / sch_fp
+   touch save/interruption   # For sch_ufm
+   ```
+
    ```bash
    touch SAVE/interruption
    ```
