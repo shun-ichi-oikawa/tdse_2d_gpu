@@ -158,7 +158,7 @@ Time-series expectation values and variances are recorded in **19 columns** (wit
 | **6** | `var_r` | Total spatial variance $\sigma_x^2 + \sigma_y^2$ | **16** | `var_Px` | Canonical momentum variance $\sigma_{P_x}^2$ |
 | **7** | `<mv_x>` | Kinetic momentum $\langle m v_x \rangle$ | **17** | `var_Py` | Canonical momentum variance $\sigma_{P_y}^2$ |
 | **8** | `<mv_y>` | Kinetic momentum $\langle m v_y \rangle$ | **18** | `var_P` | Total canonical momentum variance |
-| **9** | `var_mvx` | Kinetic momentum variance $\sigma_{m v_x}^2$ \iint \lvert \psi \rvert^2 dx dy - 1$
+| **9** | `var_mvx` | Kinetic momentum variance $\sigma_{m v_x}^2$ | **19** | `err` | Normalization error $\iint \lvert \psi \rvert^2 \thinspace dx \thinspace dy - 1$ | | | |
 | **10** | `var_mvy` | Kinetic momentum variance $\sigma_{m v_y}^2$ | | | |
 
 ---
