@@ -186,7 +186,7 @@ This work builds upon a series of studies on quantum-classical correspondence an
 6. **S. Oikawa**, P.K. Chan, and R. Ueda, *"Quantum-Mechanical Behavior of a Charged Particle in a Magnetic Field with a Gradient"*, *Plasma and Fusion Research* **8**, 2401048 (2013). DOI: `10.1585/pfr.8.2401048`
 7. P.K. Chan, **S. Oikawa**, and W. Kosaka, *"Quantum-Mechanical Wave-Packet Dynamics in Non-Uniform Electric Fields"*, *Plasma and Fusion Research* **11**, 2401031 (2016). DOI: `10.1585/pfr.11.2401031`
 8. P.K. Chan, **S. Oikawa**, and W. Kosaka, *"Long-Term Evolution of Quantum Wave Packets in Crossed Electromagnetic Fields"*, *Plasma and Fusion Research* **11**, 2401092 (2016). DOI: `10.1585/pfr.11.2401092`
-9. W. Kosaka **S. Oikawa**, and P.K. Chan, *"Two-Dimensional Quantum Wave-Packet Simulation of Charged Particles under Electrostatic Perturbations"*, *Plasma and Fusion Research* **11**, 2401098 (2016). DOI: `10.1585/pfr.11.2401098`
+9. W. Kosaka, **S. Oikawa**, and P.K. Chan, *"Two-Dimensional Quantum Wave-Packet Simulation of Charged Particles under Electrostatic Perturbations"*, *Plasma and Fusion Research* **11**, 2401098 (2016). DOI: `10.1585/pfr.11.2401098`
 10. P.K. Chan, **S. Oikawa**, and W. Kosaka, *"Quantum-Classical Correspondence for Charged-Particle Motion in Inhomogeneous Electromagnetic Fields"*, *Plasma and Fusion Research* **12**, 2401017 (2017). DOI: `10.1585/pfr.12.2401017`
 
 ---
