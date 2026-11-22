@@ -178,7 +178,7 @@ All scripts inside `PLT/` are designed to be executed from within the `PLT/` dir
 
 This work builds upon a series of studies on quantum-classical correspondence and wave-packet dynamics in magnetic fields:
 
-1. **S. Oikawa**, *"Generalization of Quantum-Mechanical Equation Structures for Cyclotron Motion under Arbitrary Perturbations"* (submitted).
+1. **S. Oikawa**, *"Generalization of Quantum-Mechanical Equation Structures for Cyclotron Motion under Arbitrary Perturbations"* (submitted to Journal of Mathematical Physics, Manuscript ID: JMP26-AR-03467).
 2. **S. Oikawa**, T. Imai, and E. Ueda, *"Quantum-Mechanical Wave-Packet Dynamics of a Charged Particle in a Uniform Magnetic Field"*, *Plasma and Fusion Research* **6**, 2401083 (2011). DOI: `10.1585/pfr.6.2401083`
 3. R. Ueda, **S. Oikawa**, and T. Imai, *"Numerical Analysis of Quantum-Mechanical Wave-Packet Dynamics in a Uniform Magnetic Field"*, *Plasma and Fusion Research* **6**, 2401087 (2011). DOI: `10.1585/pfr.6.2401087`
 4. **S. Oikawa**, R. Ueda, and T. Imai, *"Quantum-Mechanical Effects on Cyclotron Motion in a Uniform Magnetic Field"*, *Plasma and Fusion Research* **7**, 2401053 (2012). DOI: `10.1585/pfr.7.2401053`
