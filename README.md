@@ -25,7 +25,7 @@ This repository provides the CUDA/C/Fortran source code accompanying the researc
 ## Repository Structure
 
 ```text
-tdse_2d_gpu/          <-- GitHubリポジトリのルート（作業ディレクトリ sch に相当）
+tdse_2d_gpu/          <-- Root of the GitHub repository (corresponds to the working directory `sch`)
 ├── Makefile
 ├── sch.cu
 ├── sch.inp
@@ -42,7 +42,7 @@ tdse_2d_gpu/          <-- GitHubリポジトリのルート（作業ディレク
 ├── cudacomplex.h
 ├── LICENSE
 ├── README.md
-├── OUT/              <-- 実行時に自動作成・または .gitkeep を配置
+├── OUT/              <-- Created automatically at runtime (or tracked via `.gitkeep`)
 ├── out/
 ├── SAVE/
 ├── save/
