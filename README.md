@@ -14,7 +14,7 @@ This repository provides the CUDA/C/Fortran source code accompanying the researc
 ### Key Numerical & Physical Features
 * **Spatial Discretization & Domain**: Finite-difference method (FDM) on a 2D Cartesian grid $[-L_x, L_x] \times [-L_y, L_y]$ (default $L_x = L_y = 16$, grid spacing $h_x = h_y = 0.02$, corresponding to $1601 \times 1601$ grid points).
 * **Time Integration**: Implicit Crank–Nicolson-type scheme solved iteratively via Successive Over-Relaxation (SOR) on NVIDIA GPUs (double precision `FP64`).
-* **Boundary Conditions**: Inhomogeneous fixed Dirichlet boundary conditions. At $\tau = 0$, the analytical Gaussian wave packet is evaluated across the entire domain including the boundaries; for $\tau > 0$, the boundary values remain fixed at their initial ($\tau = 0$) free-space values.
+* **Boundary Conditions**: Inhomogeneous fixed Dirichlet boundary conditions. At $\tau = 0$, the interior domain is initialized with a standard Gaussian wave packet, while the boundary values are determined via a natural boundary condition ($\partial^2 \psi / \partial n^2 = 0$, implemented as linear extrapolation $\psi_0 = 2\psi_1 - \psi_2$ from the two adjacent interior grid points) and held fixed for $\tau > 0$.
 * **Gauge & Perturbation Flexibility**:
   * Vector potential formulated in the Landau gauge $\mathbf{A} = (-B_z y, 0, 0)$ (with optional magnetic field gradient parameter `LB_INV`).
   * Supports weak uniform electric fields (default), polynomial/sinusoidal electric fields, and arbitrary spatial distributions of point/Gaussian field charges evaluated via Double Exponential numerical integration (`DEHINT.for`).
