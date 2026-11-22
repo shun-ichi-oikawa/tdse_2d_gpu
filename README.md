@@ -128,8 +128,7 @@ In `sch.inp`, variables ending with an underscore (`_`) denote reference physica
 * `v0_ = 10` [m/s], `Bz_ = 10` [T], `mp_ = 1.67262192e-27` [kg], `e_ = 1.60217663e-19` [C], `h_bar_ = 1.05457182e-34` [J·s]: Reference SI scales.
 
 ### 2. Reproducing Specific Cases from the Paper
-* **Dimensionless Planck Constant $\hbar^* \approx 0.362$**:
-  Set `h_bar_ = 0.6324e-34` (with `v0_ = 10`, `Bz_ = 10`, `mp_ = 1.67262192e-27`, `e_ = 1.60217663e-19`) in `sch.inp`.
+* **Dimensionless Planck Constant $\hbar^{\ast} \approx 0.362$:** Set `h_bar_ = 0.6324e-34` (with `v0_ = 10`, `Bz_ = 10`, `mp_ = 1.67262192e-27`, `e_ = 1.60217663e-19`) in `sch.inp`.
 * **Quadratic Electric Field Perturbation ($E_y \propto y^2$)**:
   In `potential.cu` (lines 63–64), replace the linear potential energy with the cubic potential energy:
   ```c
