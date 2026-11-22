@@ -110,10 +110,6 @@ make clean
    touch save/interruption   # For sch_ufm
    ```
 
-   ```bash
-   touch SAVE/interruption
-   ```
-
 ---
 
 ## Configuration & Reproducing Paper Results
