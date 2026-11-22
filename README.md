@@ -196,7 +196,7 @@ This work builds upon a series of studies on quantum-classical correspondence an
 * **Author**: Shun-ichi Oikawa (及川 俊一)  
   Invited Teacher, Faculty of Engineering, Hokkaido University, Sapporo 060-8628, Japan  
   Contact: `lopia312oikawa@gmail.com`
-  ORCID: https://orcid.org
+  ORCID: [0009-0001-5603-2787](https://orcid.org)
   Zenodo Archive (v1.0.0): DOI 10.5281/zenodo.24416581
 
 If you use this code in your research, please cite the accompanying paper and the Zenodo archive of this repository.
