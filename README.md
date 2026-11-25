@@ -136,6 +136,12 @@ In `sch.inp`, variables ending with an underscore (`_`) denote reference physica
   REAL y2 = y * y;
   return - q * Ey * y * y2 / 3 * LE4_INV;
   ```
+* **Sinusoidal Electric Field Perturbation ($E_{S}(k_{E} y) = E \cos(k_{E} y)$):** In `potential.cu` (around lines 77–80), enable the corresponding sinusoidal potential energy $-q \int E_{S}(k_{E} y)\,dy$:
+  ```cuda
+  return - q * Ey / k_E * sin(k_E * y);
+  ```
+  *(or `return - q * Ey * lmd_E * sin(y / lmd_E);` with $\lambda_{E} = 1 / k_{E}$ to avoid small denominators in the long-wavelength regime).*
+
 * **50.25 Cyclotron Periods Long-Term Runs**:
   In `sch.cu` (around line 138), change the cycle multiplier `(5 / 5)` to `(50 / 5)`:
   ```c
