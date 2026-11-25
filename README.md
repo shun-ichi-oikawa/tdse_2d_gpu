@@ -136,7 +136,7 @@ In `sch.inp`, variables ending with an underscore (`_`) denote reference physica
   REAL y2 = y * y;
   return - q * Ey * y * y2 / 3 * LE4_INV;
   ```
-* **Sinusoidal Electric Field Perturbation ($E_{S}(k_{E} y) = E \cos(k_{E} y)$ with $E = E_{y}$):** In `potential.cu` (around lines 77–80), enable the corresponding sinusoidal potential energy $-q \int E_{S}(k_{E} y)\,dy$:
+* **Sinusoidal Electric Field Perturbation ($E_{S}(k_{E} y) = E \cos(k_{E} y)$ with $E = E_{y}$):** In `potential.cu` (around lines 77–80), enable the corresponding sinusoidal potential energy $-q \int E_{S}(k_{E} y)\,dy$ (with `Ey = 1e-6`, `k_E = 1`, and the standard CODATA reduced Planck constant `h_bar_ = 1.05457182e-34` in `sch.inp`):
   ```cuda
   return - q * Ey / k_E * sin(k_E * y);
   ```
