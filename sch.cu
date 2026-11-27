@@ -152,7 +152,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	printf("Nx2 = %d Ny2 = %d hx = %e hy = %e NG = %d\n", Nx2, Ny2, hx, hy, NG);
 	printf("h_bar = %e\n", h_bar);
 
-	#ifndef FieldParticle
+	#if !defined(FieldParticle) && !defined(StaticDebye) && !defined(DynamicDebye) || defined(DynamicDebye)	//#if !defined(FieldParticle) && !defined(StaticDebye) && !defined(DynamicDebye) || defined(DynamicDebye)
 		int s3 = sizeof(CMPLX)+sizeof(CMPLX)+sizeof(REAL);	// sizeof Psi + Phi + Res
 															// s3=20(REAL4),s3=40(double)
 	#else
@@ -180,9 +180,9 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	for (int ix = 0; ix < Nx2; ix++){ x[ix] = hx * (ix-Nx); }
 	for (int iy = 0; iy < Ny2; iy++){ y[iy] = hy * (iy-Ny); }
 
-	#ifdef FieldParticle
+	REAL Eps0 = 8.8542e-12 / Square(e_) * mp_ * Square(v0_) * rl_;	// 真空の誘電率
+	#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		REAL *u = (REAL*) host_allocate< REAL> (NG); if( u == 0 ) { printf("%d Error\n", SIZED * NG); return 0; }
-		REAL Eps0 = 8.8542e-12 / Square(e_) * mp_ * Square(v0_) * rl_;	// 真空の誘電率
 		printf("Eps0= %e\n", Eps0);
 		PotEne( u, x, y, q, sgm, Eps0, Nx2, Ny2 );
 		pot( Nx2, Ny2, x, y, u );
@@ -287,7 +287,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	*/
 		//-------------init judge---------------------------------------------------
 		EXPECT( Psi, x, y,
-		#ifdef FieldParticle
+		#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		                   u,
 		#endif
 				&mvx_av, &mvy_av, &Px_av, &Py_av, &E0, &var_mv, &var_mvx, &var_mvy, &var_P, &var_Px, &var_Py,
@@ -324,7 +324,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 		/***********************************************/
 	}
 
-	#ifdef FieldParticle
+	#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 	REAL     *u_device; cudaMalloc( (void**) &u_device,   SIZED * Nx2 * Nb_ );
 	#endif
 	CMPLX  *Psi_device; cudaMalloc( (void**) &Psi_device, SIZEZ * Nx2 * Nb_ );
@@ -356,7 +356,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	//
 	if( Nb2 == 0 ) {	// すべてビデオメモリに収まる
 		cudaMemcpy( Psi_device, Psi, SIZEZ * NG, cudaMemcpyHostToDevice);
-		#ifdef FieldParticle
+		#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		cudaMemcpy(   u_device,   u, SIZED * NG, cudaMemcpyHostToDevice);
 		#endif
 	}
@@ -366,10 +366,14 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	printf("k: %d -> %d\n", k_start, N_t_step);
 	int k;
 	for(k = k_start; k <= N_t_step; k++)
-	{		for(	int k2 = 1; k2 <= Nb2; k2++)	// すべてビデオメモリに収まらない
+	{	
+#ifdef DynamicDebye
+   UpdateDynamicPot( u_device, q, sgm, Eps0, Nx2, Ny2, (k - 0.5) * tau );
+#endif
+			for(	int k2 = 1; k2 <= Nb2; k2++)	// すべてビデオメモリに収まらない
 		{	int N_field = k2 - 1;
 			cudaMemcpy ( Psi_device, Psi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb_ , cudaMemcpyHostToDevice);
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 			cudaMemcpy (   u_device,   u + Nx2 * Nb * N_field, SIZED * Nx2 * Nb_ , cudaMemcpyHostToDevice);
 			PHI <<< grid, threads >>> ( Psi_device, Phi_device, u_device, N_field );
 			#else
@@ -381,11 +385,11 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 		{	int N_field = Nb2;
 			if ( Nb2 != 0 ) {
 				cudaMemcpy ( Psi_device, Psi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb3_, cudaMemcpyHostToDevice);
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				cudaMemcpy (   u_device,   u + Nx2 * Nb * N_field, SIZED * Nx2 * Nb3_, cudaMemcpyHostToDevice);
 				#endif
 			}
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				PHI <<< grid, threads >>> ( Psi_device, Phi_device, u_device, N_field );
 			#else
 				PHI <<< grid, threads >>> ( Psi_device, Phi_device,           N_field );
@@ -404,12 +408,12 @@ cudaDeviceSynchronize();
 				int N_field = k2 - 1;
 				cudaMemcpy ( Phi_device, Phi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb_, cudaMemcpyHostToDevice);
 				cudaMemcpy ( Psi_device, Psi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb_, cudaMemcpyHostToDevice);
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				cudaMemcpy ( u_device, u + Nx2 * Nb * N_field, SIZED * Nx2 * Nb_, cudaMemcpyHostToDevice);
 				#endif
 				if (1)	/* 1 <- 0, on May 18, 2015: oikawa */
 				{// 1
-					#ifdef FieldParticle
+					#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 						SOR <<< grid, threads >>> ( Psi_device, Phi_device, Res_device, u_device, N_field );
 					#else
 						SOR <<< grid, threads >>> ( Psi_device, Phi_device, Res_device, N_field );
@@ -419,7 +423,7 @@ cudaDeviceSynchronize();
 				else
 				{// 0		/*Does not work on host-b (CUDA 7.0) on May 18, 2015: oikawa */
 					int BLOCKS = ( Ny2 % THREADS == 0  ) ? Ny2 / THREADS : Ny2 / THREADS  + 1;
-					#ifdef FieldParticle
+					#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 						sor0<<< BLOCKS, THREADS >>> ( Psi_device, Phi_device, Res_device, u_device, N_field );
 cudaDeviceSynchronize();
 						sor1<<< BLOCKS, THREADS >>> ( Psi_device, Phi_device, Res_device, u_device, N_field );
@@ -443,13 +447,13 @@ cudaDeviceSynchronize();
 				if ( Nb2 != 0 )
 				{	( cudaMemcpy ( Phi_device, Phi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb3_, cudaMemcpyHostToDevice));
 					( cudaMemcpy ( Psi_device, Psi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb3_, cudaMemcpyHostToDevice));
-					#ifdef FieldParticle
+					#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 						( cudaMemcpy ( u_device, u + Nx2 * Nb * N_field, SIZED * Nx2 * Nb3_, cudaMemcpyHostToDevice));
 					#endif
 				}
 				if (1)
 				{// 1
-					#ifdef FieldParticle
+					#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 						SOR <<< grid, threads >>> ( Psi_device, Phi_device, Res_device, u_device, N_field );
 					#else
 						SOR <<< grid, threads >>> ( Psi_device, Phi_device, Res_device, N_field );
@@ -459,7 +463,7 @@ cudaDeviceSynchronize();
 				else
 				{// 0
 					int BLOCKS = ( Ny2 % THREADS == 0  ) ? Ny2 / THREADS : Ny2 / THREADS  + 1;
-					#ifdef FieldParticle
+					#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 						sor0<<< BLOCKS, THREADS >>> ( Psi_device, Phi_device, Res_device, u_device, N_field );
 cudaDeviceSynchronize();
 						sor1<<< BLOCKS, THREADS >>> ( Psi_device, Phi_device, Res_device, u_device, N_field );
@@ -489,13 +493,13 @@ cudaDeviceSynchronize();
 				/***** 終了処理 **************************************************************/
 				fclose(interrupt);	//	中断チェック用のFILE*変数をクローズする
 				cudaFree(Psi_device); cudaFree(Phi_device); cudaFree(Res_device);
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				cudaFree(u_device);
 				#endif
 				cudaDeviceReset();
 				// -----------------------------------------------------------------------------
 				host_release(x); host_release(y); host_release(Psi); host_release(Phi);
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				host_release(u);
 				#endif
 				/*****************************************************************************/
@@ -516,7 +520,7 @@ cudaDeviceSynchronize();
 		/********** 期待値らを出力する **********/
 		if( k % N_rec == 0 ) {
 			EXPECT( Psi, x, y,
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 			                   u,
 			#endif
 					&mvx_av, &mvy_av, &Px_av, &Py_av, &EN, &var_mv, &var_mvx, &var_mvy, &var_P, &var_Px, &var_Py,
@@ -545,11 +549,11 @@ cudaDeviceSynchronize();
 						(cuDoubleComplex*)
 					#endif
 					Psi_device, 1, &Dznrm2_tmp);
-					printf("k=%7d, itr=%3d, residue=%11.3e, error using blasnrm2=%11.3e\n",
+					printf("k=%7d, itr=%3d, error sum of squares on grids=%11.3e, error using blasnrm2=%11.3e\n",
 						     k, itr, var, Square(Dznrm2_tmp) * hh - 1 );
 				#else
 //					printf("blasasum=%11.3e\n", Square(cublasDasum(2*NG,(REAL*)Psi_device, 1)) * hh - 1 );
-					printf("k=%7d, itr=%3d, residue=%11.3e, error using blasnrm2=%11.3e\n",
+					printf("k=%7d, itr=%3d, error sum of squares on grids=%11.3e, error using blasnrm2=%11.3e\n",
 						     k, itr, var, Square(cublasDznrm2(NG,
 					#ifdef CUDACOMPLEX_H
 						 		(cuDoubleComplex*)
@@ -558,7 +562,7 @@ cudaDeviceSynchronize();
 				#endif
 				cudaDeviceSynchronize();
 				/*
-				printf("k=%7d, itr=%3d, residue=%11.3e, error using blasdot =%25.16e\n",
+				printf("k=%7d, itr=%3d, error sum of squares on grids=%11.3e, error using blasdot =%25.16e\n",
 					    k, itr, var, cublasDdot ( 2*NG, (REAL*)Psi_device, 1, (REAL*)Psi_device, 1)*hh-1 );
 				cudaDeviceSynchronize();
 				*/
@@ -719,14 +723,14 @@ cudaDeviceSynchronize();
 	#endif
 	/* free allocation (GPU) */
 	cudaFree(Psi_device); cudaFree(Phi_device); cudaFree(Res_device);
-	#ifdef FieldParticle
+	#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		cudaFree(u_device);
 	#endif
 	cudaDeviceReset();
 	// -----------------------------------------------------------------------------
 	/* free allocation (CPU) */
 	host_release(x); host_release(y); host_release(Psi); host_release(Phi);
-	#ifdef FieldParticle
+	#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		host_release(u);
 	#endif
 	return 0;
