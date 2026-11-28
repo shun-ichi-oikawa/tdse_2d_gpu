@@ -134,10 +134,10 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	int Ny2		= 2 * Ny + 1;
 	int NG		= Nx2 * Ny2;
 	//double N_t_s    =     N_step * m / (q * Bz) * 1050 / 100;
-	//double N_t_s    =     N_step * m / (q * Bz) * 105 / 100 * (0.5 / 5);	//打ち切る用
-	double N_t_s    =     N_step * m / (q * Bz) * 105 / 100 * (5 / 5);	// 5周用
+	//double N_t_s    =     N_step * m / (q * Bz) * 105 / 100 * (0.5 / 5);	// for early termination
+	double N_t_s    =     N_step * m / (q * Bz) * 105 / 100 * (5 / 5);	// for 5 cyclotron periods
 	int    N_t_step = int(N_t_s);
-	//N_t_step = 40;	// 打ちきり用
+	//N_t_step = 40;	// for early termination 
 	int k_start = 1;
 
 	CMPLX mvx_av, mvy_av, Px_av, Py_av;
@@ -159,20 +159,20 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 		int s3 = sizeof(CMPLX)+sizeof(CMPLX)+sizeof(REAL)+sizeof(REAL);	// sizeof Psi + Phi + Res + u
 																		// s3=24(REAL4),s3=48(double)
 	#endif
-	int Nb = int( vSIZE / ( s3 * Nx2 ) - 2 );	// 一度に計算できるだろう行数
+	int Nb = int( vSIZE / ( s3 * Nx2 ) - 2 );	// estimated number of rows computable at once 
 	printf("Nb = %d\n", Nb);
 	int Nb2 = ( Ny2 - 2 ) / Nb;
-	if ( Nb2 == 0 ) Nb = Ny2 - 2;	// Nb2 = 0 ならば一度に全部計算できる
-	int Nb_ = Nb + 2;			// デバイスに一度に送る行数（基本）
-	int Nb3_= Ny2 - Nb * Nb2;	// デバイスに最後に送る行数（余りの行）
-	int Nb3 = Nb3_ - 2;			// 最後に計算する行数（余りの行）
+	if ( Nb2 == 0 ) Nb = Ny2 - 2;	// if Nb2 = 0, the entire domain can be computed at once
+	int Nb_ = Nb + 2;			// number of rows transferred to the device at once (standard)
+	int Nb3_= Ny2 - Nb * Nb2;	// number of rows transferred to the device at the end (remaining rows)
+	int Nb3 = Nb3_ - 2;			// number of rows computed at the end (remaining rows)
 
 	#ifdef BLAS_V2
 		REAL var_tmp = 0;
 	#endif
 
 	printf("Ny2= %d Nb= %d Nb2= %d Nb3= %d Nb_= %d\n", Ny2, Nb, Nb2, Nb3, Nb_);
-	// Ny2=全行数, Nb=一度に計算する行数
+	// Ny2 = total number of rows, Nb = number of rows computed at once
 
 	//----------------------------------------------------------------------------
 	REAL *x =(REAL*) host_allocate<REAL>(Nx2);
@@ -180,7 +180,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	for (int ix = 0; ix < Nx2; ix++){ x[ix] = hx * (ix-Nx); }
 	for (int iy = 0; iy < Ny2; iy++){ y[iy] = hy * (iy-Ny); }
 
-	REAL Eps0 = 8.8542e-12 / Square(e_) * mp_ * Square(v0_) * rl_;	// 真空の誘電率
+	REAL Eps0 = 8.8542e-12 / Square(e_) * mp_ * Square(v0_) * rl_;	//  vacuum permittivity
 	#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		REAL *u = (REAL*) host_allocate< REAL> (NG); if( u == 0 ) { printf("%d Error\n", SIZED * NG); return 0; }
 		printf("Eps0= %e\n", Eps0);
@@ -194,8 +194,8 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	printf("host Phi\n");
 
 	//---------- LOAD Wavefunction ----------
-	if( load_wavefunction(N_t_step, NG, &k_start, Psi, &E0) == 0 ) // 真/偽=1/0
-	{	// *.binファイルが見つからない
+	if( load_wavefunction(N_t_step, NG, &k_start, Psi, &E0) == 0 ) // true/false = 1/0
+	{	// *.bin file not found
 		// Initialize the wavefunction *********************
 		REAL Norm_Psi = 1 / ( sgm * sqrt(pi) );
 		REAL Sum_Psi = 0;
@@ -217,7 +217,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 			}
 		}
 		Sum_Psi *= hh;	printf("Rho     =%20.16f\n", Sum_Psi );
-		// 自然境界条件	begin
+		// Natural boundary condition	begin
 		#ifdef CUDACOMPLEX_H
 		printf("psi[0]={%11.3e,%11.3e} before BC\n", Psi[0].real(), Psi[0].imag());
 		#else
@@ -248,7 +248,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 		#else
 		printf("psi[0]={%11.3e,%11.3e}  after BC\n", cuCreal(Psi[0]), cuCimag(Psi[0]));
 		#endif
-		// 自然境界条件	end
+		// Natural boundary condition end
 		REAL Sum_Psi_ = 0;
 		for(	int iy = 0; iy < Ny2; iy++)
 		{	for(int ix = 0; ix < Nx2; ix++)
@@ -265,7 +265,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 		}
 		Sum_Psi_ *= hh;	printf("Rho_bar =%20.16f\n", Sum_Psi_);
 	/*
-		// cublasの使い方例
+		// Example of cublas usage
 		{	REAL *s = (REAL*) malloc( SIZED * NG );
 			for(	int iy = 0; iy < Ny2; iy++)
 			{	for(int ix = 0; ix < Nx2; ix++)
@@ -308,7 +308,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 		Record( 0, tau, E0, EN, var_mvx, var_mvy, var_mv, mvx_av, mvy_av, var_Px, var_Py, var_P, x_av, y_av, var_x, var_y, var_r, Px_av, Py_av, err);
 		rho(0, Nx2, Ny2, hh, x, y, Psi);
 
-	//	OUTに一初めの~~~.rhoを書いたところで止めるためのreturn 0;
+	//	return 0; to stop right after writing the initial ~~~.rho to OUT
 	//	return 0;
 	//
 		printf("       k itr     <x>     <y>  var[r]     <u>     <v>  var[p]           <Px>         <Py>          EN       EN-E0       error\n");
@@ -354,7 +354,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 	//*************** end Set coeffcient *******************
 	SetConst( Nb, Nx2, Ny2, Nb3_, Nx, Ny, sgm2, pi, hx, hy, hh, omg, x0, y0, Bz, q, beta, gamma, zeta, xi);
 	//
-	if( Nb2 == 0 ) {	// すべてビデオメモリに収まる
+	if( Nb2 == 0 ) {	// everything fits in video memory
 		cudaMemcpy( Psi_device, Psi, SIZEZ * NG, cudaMemcpyHostToDevice);
 		#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 		cudaMemcpy(   u_device,   u, SIZED * NG, cudaMemcpyHostToDevice);
@@ -370,7 +370,7 @@ int main ( int argc, char** argv) // Program to solve the Schrodinger equation
 #ifdef DynamicDebye
    UpdateDynamicPot( u_device, q, sgm, Eps0, Nx2, Ny2, (k - 0.5) * tau );
 #endif
-			for(	int k2 = 1; k2 <= Nb2; k2++)	// すべてビデオメモリに収まらない
+			for(	int k2 = 1; k2 <= Nb2; k2++)	// does not fit entirely in video memory
 		{	int N_field = k2 - 1;
 			cudaMemcpy ( Psi_device, Psi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb_ , cudaMemcpyHostToDevice);
 			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
@@ -404,7 +404,7 @@ cudaDeviceSynchronize();
 		while( var > eps )
 		{	itr++;	var = 0;
 			for(int k2 = 1; k2 <= Nb2; k2++)
-			{	// 領域の分割がある場合
+			{	// when domain decomposition is used
 				int N_field = k2 - 1;
 				cudaMemcpy ( Phi_device, Phi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb_, cudaMemcpyHostToDevice);
 				cudaMemcpy ( Psi_device, Psi + Nx2 * Nb * N_field, SIZEZ * Nx2 * Nb_, cudaMemcpyHostToDevice);
@@ -490,8 +490,8 @@ cudaDeviceSynchronize();
 			int NotNumber = isnan(var);
 			if ( itr == 99 || NotNumber != 0 )
 			{	printf("+++++ Abnormal end +++++\nOVER itr = %d, NAN = %d\n", itr, NotNumber);
-				/***** 終了処理 **************************************************************/
-				fclose(interrupt);	//	中断チェック用のFILE*変数をクローズする
+				/***** Finalization **************************************************************/
+				fclose(interrupt);	//	close the FILE* variable used for interruption check
 				cudaFree(Psi_device); cudaFree(Phi_device); cudaFree(Res_device);
 				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				cudaFree(u_device);
@@ -516,8 +516,8 @@ cudaDeviceSynchronize();
 		//----- end while ---------------------------------------------------------------------
 
 		if (  Nb2     == 0 ) ( cudaMemcpy ( Psi, Psi_device, SIZEZ * NG, cudaMemcpyDeviceToHost) );
-		// 毎回必ず、デバイスからホストへPsiを戻す
-		/********** 期待値らを出力する **********/
+		// Always copy Psi back from device to host at every step
+		/********** Output expectation values **********/
 		if( k % N_rec == 0 ) {
 			EXPECT( Psi, x, y,
 			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
@@ -536,12 +536,12 @@ cudaDeviceSynchronize();
 			if ( k == N_t_step )
 				printf("      k itr     <x>     <y>  var[r]     <u>     <v>  var[p]           <Px>          <Py>          EN       EN-E0       error\n");
 
-			// ここにあったらN_rec_rhoはN_recの倍数でないと一切出力されないのでは?
+			// If placed here, N_rec_rho would never be output unless it is a multiple of N_rec, right?
 		}	//printf("k=%7d, itr = %2d, var0 = %12.3e, var = %12.3e\n", k, itr, var0, var);
-		/********** 粒子保存の確認 **********/
-		if( k % 20 == 0 )		// 確認が終わったら\nを\rにする
+		/********** Check particle conservation **********/
+		if( k % 20 == 0 )		// Change \n to \r once verification is complete
 		{	if( Nb2 == 0 )
-			{	//	領域分割なし
+			{	//	without domain decomposition
 				#ifdef BLAS_V2
 					REAL Dznrm2_tmp;
 					stat = cublasDznrm2(handle, NG,
@@ -568,8 +568,8 @@ cudaDeviceSynchronize();
 				*/
 			}
 			else
-			{	// 領域分割あり
-				// ************ cublas使って粒子保存を見る場合はこっち。
+			{	// with domain decomposition
+				// ************ Use this section when checking particle conservation with cublas. 
 				REAL blasnrm2 = 0;	//REAL blasdot  = 0;
 				#ifdef BLAS_V2
 					REAL blasDznrm2_tmp1 = 0;
@@ -584,12 +584,12 @@ cudaDeviceSynchronize();
 					#ifdef CUDACOMPLEX_H
 						(cuDoubleComplex*)
 					#endif
-					(Psi_device + Nx2), 1) ); // 最後のブロック＋最後の行
+					(Psi_device + Nx2), 1) ); // last block + last row
 					/*
 					#ifdef CUDACOMPLEX_H
-					blasnrm2 = Square(cublasDznrm2( Nx2 * (Nb3 + 1), (cuDoubleComplex*)(Psi_device + Nx2), 1) ); // 最後のブロック＋最後の行
+					blasnrm2 = Square(cublasDznrm2( Nx2 * (Nb3 + 1), (cuDoubleComplex*)(Psi_device + Nx2), 1) ); // last block + last row
 					#else
-					blasnrm2 = Square(cublasDznrm2( Nx2 * (Nb3 + 1),                    Psi_device + Nx2 , 1) ); // 最後のブロック＋最後の行
+					blasnrm2 = Square(cublasDznrm2( Nx2 * (Nb3 + 1),                    Psi_device + Nx2 , 1) ); // last block + last row
 					#endif
 					*/
 				#endif
@@ -612,12 +612,12 @@ cudaDeviceSynchronize();
 					#ifdef CUDACOMPLEX_H
 						(cuDoubleComplex*)
 					#endif
-					Psi_device, 1));		 // 最初のブロック＋最初の行
+					Psi_device, 1));		 // first block + first row
 				/*
 				#ifdef CUDACOMPLEX_H
-				blasnrm2 += Square(cublasDznrm2( Nx2 * (Nb + 1), (cuDoubleComplex*)Psi_device, 1));		 // 最初のブロック＋最初の行
+				blasnrm2 += Square(cublasDznrm2( Nx2 * (Nb + 1), (cuDoubleComplex*)Psi_device, 1));		 // first block + first row
 				#else
-				blasnrm2 += Square(cublasDznrm2( Nx2 * (Nb + 1),                   Psi_device, 1));		 // 最初のブロック＋最初の行
+				blasnrm2 += Square(cublasDznrm2( Nx2 * (Nb + 1),                   Psi_device, 1));		 // first block + first row
 				#endif
 				*/
 				#endif
@@ -635,19 +635,19 @@ cudaDeviceSynchronize();
 						#ifdef CUDACOMPLEX_H
 							(cuDoubleComplex*)
 						#endif
-						(Psi_device + Nx2), 1, &blasDznrm2_tmp3);	// 中間のブロック
+						(Psi_device + Nx2), 1, &blasDznrm2_tmp3);	// intermediate blocks
 						blasnrm2 += blasDznrm2_tmp3 * blasDznrm2_tmp3;
 					#else
 						blasnrm2 += Square(cublasDznrm2( Nx2 * Nb,
 						#ifdef CUDACOMPLEX_H
 							(cuDoubleComplex*)
 						#endif
-						(Psi_device + Nx2), 1));	// 中間のブロック
+						(Psi_device + Nx2), 1));	// 32. intermediate blocks
 						/*
 						#ifdef CUDACOMPLEX_H
-						blasnrm2 += Square(cublasDznrm2( Nx2 * Nb, (cuDoubleComplex*)(Psi_device + Nx2), 1));	// 中間のブロック
+						blasnrm2 += Square(cublasDznrm2( Nx2 * Nb, (cuDoubleComplex*)(Psi_device + Nx2), 1));	// 32. intermediate blocks
 						#else
-						blasnrm2 += Square(cublasDznrm2( Nx2 * Nb, Psi_device + Nx2, 1));	// 中間のブロック
+						blasnrm2 += Square(cublasDznrm2( Nx2 * Nb, Psi_device + Nx2, 1));	// 32. intermediate blocks
 						#endif
 						*/
 					#endif
@@ -660,7 +660,7 @@ cudaDeviceSynchronize();
 				printf("k=%7d, itr=%3d, blasnrm2=%11.3e\n", k, itr, blasnrm2 * hh - 1);
 				//printf("k=%7d, itr=%3d, blasdot =%25.16e\n", k, itr, blasdot  * hh - 1);
 
-//				************ cublas使いたくなくて、どうしても粒子保存見たければ使う。
+//				************ Use this section when checking particle conservation with cublas.
 /*				REAL asum = 0;
 				for(		int iy = 0; iy < Ny2; iy++)
 				{	for(	int ix = 0; ix < Nx2; ix++)
@@ -676,32 +676,26 @@ cudaDeviceSynchronize();
 */
 			}
 		}
-		/********** ディレクトリOUTに精度を落とした確率密度関数を出力する **********/
+		/********** Output reduced-precision probability density function to directory OUT **********/
 		if ( k % N_rec_rho == 0 )
 		{	rho ( k, Nx2, Ny2, hh, x, y, Psi);
 			/********** Interruption **********/
 			#ifndef _UFM_
 				if( (interrupt = fopen("SAVE/interruption", "r")) != NULL )
-			{	printf(" Interruption, k = %d\n", k); // このタイミングなら今回の波動関数
-				fclose(interrupt);	//	中断チェック用のFILE*変数をクローズする
+			{	printf(" Interruption, k = %d\n", k); // At this timing, the current wavefunction
+				fclose(interrupt);	//	close the FILE* variable used for interruption check
 				break;
 			}
 			#else
 				if( (interrupt = fopen("save/interruption", "r")) != NULL )
-			{	printf(" Interruption, k = %d\n", k); // このタイミングなら今回の波動関数
-				fclose(interrupt);	//	中断チェック用のFILE*変数をクローズする
+			{	printf(" Interruption, k = %d\n", k);
+				fclose(interrupt);
 				break;
 			}
 			#endif
-			//if( (interrupt = fopen("SAVE/interruption", "r")) != NULL )
-			//{	printf(" Interruption, k = %d\n", k); // このタイミングなら今回の波動関数
-			//	fclose(interrupt);	//	中断チェック用のFILE*変数をクローズする
-			//	break;
-			//}
-			/**********************************/
 		}
-		/********** 10500ごとに定期的に波動関数を出力させる **********/
-		// 典型的なパラメータで105000は5周程度、10500は半周くらい
+		/********** Periodically output wavefunction every 10500 steps **********/
+		// With typical parameters, 105000 is ~5 periods and 10500 is ~0.5 period
 		if(k % 10500 == 0)
 		{	printf("Save Wavefunction, k = %d\n", k);
 			save_wavefunction(NG, k, Psi, E0);
@@ -710,11 +704,11 @@ cudaDeviceSynchronize();
 		fflush(stdout);
 	}	printf("Elapsed TIME = %f sec.\n", EndTimer(&timer) / 1000 );
 	/*****************************************************************************/
-	/***** 終了処理 **************************************************************/
+	/***** Finalization **********************************************************/
 	/*****************************************************************************/
 	//---------- SAVE last wavefunction --------------
 	//printf("*** Save Last wavefunction ***\n");
-	//	普通にループを終了したならばk==N_t_step+1となっているので補正する
+	//	      Correct k since k == N_t_step + 1 when the loop finishes normally
 	if( k == N_t_step+1 ) k--;
 	save_wavefunction(NG, k, Psi, E0);
 	//---------- END SAVE last wavefunction ----------
