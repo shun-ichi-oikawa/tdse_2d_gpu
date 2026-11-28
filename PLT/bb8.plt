@@ -7,8 +7,8 @@ set size square
 set grid
 unset key
 
-T  = 2*pi # 周期
-dt = T / 2e+4 # 時間刻み幅, 基本この値だが変更したら自分で変えること
+T  = 2*pi # Period
+dt = T / 2e+4 # Time step size; standard value, adjust manually if modified
 step2time(n) = sprintf("time: %6.3f", n * dt)
 
 L = 10
