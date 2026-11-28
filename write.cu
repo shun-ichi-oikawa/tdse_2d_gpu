@@ -1,4 +1,4 @@
-#pragma once  // ヘッダファイルにはこれを書く
+#pragma once  // include guard for header file
 
 void Record
 	(	int k, REAL tau, REAL E0, REAL E,
@@ -46,7 +46,7 @@ void rho ( int k, int Nx2, int Ny2, REAL hh, REAL *x, REAL *y, CMPLX *Psi)
 	sprintf(str,"out/%08d.rho",k);
 	#endif
 	FILE *f;
-	int rec = 10 * 1;	// hx = hy = 2e-2 のときに rec = 10 が基本
+	int rec = 10 * 1;	// rec = 10 is standard when hx = hy = 2e-2
 	if ( ( f = fopen(str, "w") ) == NULL ) { printf("file open error!!__%s\n", str); exit(EXIT_FAILURE); }
 	for(		int iy = 0; iy < Ny2; iy++)
 	{	for(	int ix = 0; ix < Nx2; ix++)
@@ -66,7 +66,7 @@ void rho ( int k, int Nx2, int Ny2, REAL hh, REAL *x, REAL *y, CMPLX *Psi)
 
 void pot ( int Nx2, int Ny2, REAL *x, REAL *y, REAL *u)
 {	FILE *f;
-	int rec = 10 * 1;	// hx = hy = 2e-2 のときに rec = 10 が基本
+	int rec = 10 * 1;	// rec = 10 is standard when hx = hy = 2e-2
 	if ( ( f = fopen("potential.dat", "w") ) == NULL ) { printf("file open error!!__potential.dat\n"); exit(EXIT_FAILURE); }
 	for(		int iy = 0; iy < Ny2; iy++)
 	{	for(	int ix = 0; ix < Nx2; ix++)

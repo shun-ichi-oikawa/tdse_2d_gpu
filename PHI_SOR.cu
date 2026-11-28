@@ -1,4 +1,4 @@
-#pragma once  // ヘッダファイルにはこれを書く
+#pragma once  // include guard for header file
 
 	__constant__ int   Nb_d, Nx2_d, Ny2_d, Nb3__d, Nx_d, Ny_d;
 	__constant__ REAL  sgm2_d, pi_d, hx_d, hy_d, hh_d, omg_d, x0_d, y0_d, Bz_d, q_d;
@@ -29,7 +29,7 @@ void SetConst
 	(cudaMemcpyToSymbol(    xi_d,    &xi, sizeof(xi)   ));
 }
 
-#ifdef FieldParticle
+#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 __global__ void PHI ( CMPLX *psi, CMPLX *phi, REAL *u, int N_field )
 #else
 __global__ void PHI ( CMPLX *psi, CMPLX *phi, int N_field )
@@ -52,7 +52,7 @@ __global__ void PHI ( CMPLX *psi, CMPLX *phi, int N_field )
 			BETA_ij   =  beta_d * ( d2psi_dx2 * d2psi_dy2 );
 			GAMMA_ij  = gamma_d * ( qAx * dpsi_dx + qAy * dpsi_dy );
 			ZETA_ij   =  zeta_d * ( Square( qAx ) + Square( qAy ) ) * psi[II];
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				XI_ij = xi_d * u[ II + N_field * Nb_d ] * psi[II];
 			#else
 				XI_ij = xi_d *        potential( x, y, q_d ) * psi[II];
@@ -62,7 +62,7 @@ __global__ void PHI ( CMPLX *psi, CMPLX *phi, int N_field )
 			BETA_ij   = cuCmul(  beta_d, cuCadd( d2psi_dx2, d2psi_dy2 ) );
 			GAMMA_ij  = cuCmul( gamma_d, cuCadd( cuCmul( mkCMPLX( qAx, 0 ), dpsi_dx ), cuCmul( mkCMPLX( qAy, 0 ), dpsi_dy ) ) );
 			ZETA_ij   = cuCmul(  zeta_d, cuCmul( mkCMPLX( Square( qAx ) + Square( qAy ), 0 ), psi[II] ) );
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				XI_ij = cuCmul( xi_d, cuCmul( mkCMPLX( u[ II + N_field * Nb_d ], 0 ), psi[II] ) );
 			#else
 				XI_ij = cuCmul( xi_d, cuCmul( mkCMPLX( potential( x, y, q_d ), 0 ), psi[II] ) );
@@ -74,7 +74,7 @@ __global__ void PHI ( CMPLX *psi, CMPLX *phi, int N_field )
 }
 
 
-#ifdef FieldParticle
+#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 __global__ void SOR ( CMPLX *psi, CMPLX *phi, REAL *res, REAL *u, int N_field )
 #else
 __global__ void SOR ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
@@ -98,7 +98,7 @@ __global__ void SOR ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 			BETA_ij  =  beta_d * ( d2psi_dx2 + d2psi_dy2 );
 			GAMMA_ij = gamma_d * ( qAx * dpsi_dx + qAy * dpsi_dy );
 			ZETA_ij  =  zeta_d * ( Square( qAx ) + Square( qAy ) ) * psi[II];
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				XI_ij = xi_d * u[ II + N_field * Nb_d ] * psi[II];
 				ALPHA_ij = 1	+ beta_d * 2 * ( 1 / Square( hx_d ) + 1 / Square( hy_d ) )
 					         	+ zeta_d *     (     Square( qAx  ) +     Square( qAy  ) )
@@ -117,7 +117,7 @@ __global__ void SOR ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 			BETA_ij  = cuCmul(  beta_d, cuCadd( d2psi_dx2, d2psi_dy2 ) );
 			GAMMA_ij = cuCmul( gamma_d, cuCadd( cuCmul( mkCMPLX( qAx, 0 ), dpsi_dx ), cuCmul( mkCMPLX( qAy, 0 ), dpsi_dy ) ) );
 			ZETA_ij  = cuCmul(  zeta_d, cuCmul( mkCMPLX( Square( qAx ) + Square( qAy ), 0 ), psi[II] ) );
-			#ifdef FieldParticle
+			#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 				XI_ij = cuCmul( xi_d, cuCmul( mkCMPLX( u[ II + N_field * Nb_d ], 0 ), psi[II] ) );
 				ALPHA_ij = cuCadd( cuCadd( cuCadd( mkCMPLX( 1, 0 ),
 					cuCmul( beta_d, mkCMPLX( 2 * ( 1 / Square( hx_d ) + 1 / Square( hy_d ) ), 0 ) ) ),
@@ -145,7 +145,7 @@ __global__ void SOR ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 }
 
 
-#ifdef FieldParticle
+#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 __global__ void sor0 ( CMPLX *psi, CMPLX *phi, REAL *res, REAL *u, int N_field )
 #else
 __global__ void sor0 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
@@ -177,7 +177,7 @@ __global__ void sor0 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 				 BETA_ij =  beta_s * ( d2psi_dx2 + d2psi_dy2 );
 				GAMMA_ij = gamma_s * ( qAx * dpsi_dx + qAy * dpsi_dy );
 				 ZETA_ij =  zeta_s * ( Square( qAx ) + Square( qAy ) ) * psi[II];
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 					XI_ij = xi_s * u[ II + N_field * Nb_d ] * psi[II];
 					ALPHA_ij = 1	+ beta_s * 2 * ( 1 / Square( hx_d ) + 1 / Square( hy_d ) )
 						         	+ zeta_s *     (     Square( qAx  ) +     Square( qAy  ) )
@@ -195,7 +195,7 @@ __global__ void sor0 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 				BETA_ij  = cuCmul(  beta_s, cuCadd( d2psi_dx2, d2psi_dy2 ) );
 				GAMMA_ij = cuCmul( gamma_s, cuCadd( cuCmul( mkCMPLX( qAx, 0 ), dpsi_dx ), cuCmul( mkCMPLX( qAy, 0 ), dpsi_dy ) ) );
 				ZETA_ij  = cuCmul(  zeta_s, cuCmul( mkCMPLX( Square( qAx ) + Square( qAy ), 0 ), psi[II] ) );
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 					XI_ij = cuCmul( xi_s, cuCmul( mkCMPLX( u[ II + N_field * Nb_d ], 0 ), psi[II] ) );
 					ALPHA_ij = cuCadd( cuCadd( cuCadd( mkCMPLX( 1, 0 ),
 						cuCmul( beta_s, mkCMPLX( 2 * ( 1 / Square( hx_d ) + 1 / Square( hy_d ) ), 0 ) ) ),
@@ -226,7 +226,7 @@ __global__ void sor0 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 	__syncthreads();
 }
 
-#ifdef FieldParticle
+#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 __global__ void sor1 ( CMPLX *psi, CMPLX *phi, REAL *res, REAL *u, int N_field )
 #else
 __global__ void sor1 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
@@ -259,7 +259,7 @@ __global__ void sor1 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 				BETA_ij  =  beta_s * ( d2psi_dx2 + d2psi_dy2 );
 				GAMMA_ij = gamma_s * ( qAx * dpsi_dx + qAy * dpsi_dy );
 				ZETA_ij  =  zeta_s * ( Square( qAx ) + Square( qAy ) ) * psi[II];
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 					XI_ij = xi_s * u[ II + N_field * Nb_d ] * psi[II];
 					ALPHA_ij = 1	+ beta_s * 2 * ( 1 / Square( hx_d ) + 1 / Square( hy_d ) )
 						          	+ zeta_s *     (     Square( qAx  ) +     Square( qAy  ) )
@@ -277,7 +277,7 @@ __global__ void sor1 ( CMPLX *psi, CMPLX *phi, REAL *res, int N_field )
 				BETA_ij  = cuCmul(  beta_s, cuCadd( d2psi_dx2, d2psi_dy2 ) );
 				GAMMA_ij = cuCmul( gamma_s, cuCadd( cuCmul( mkCMPLX( qAx, 0 ), dpsi_dx ), cuCmul( mkCMPLX( qAy, 0 ), dpsi_dy ) ) );
 				ZETA_ij  = cuCmul(  zeta_s, cuCmul( mkCMPLX( Square( qAx ) + Square( qAy ), 0 ), psi[II] ) );
-				#ifdef FieldParticle
+				#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 					XI_ij = cuCmul( xi_s, cuCmul( mkCMPLX( u[ II + N_field * Nb_d ], 0 ), psi[II] ) );
 					ALPHA_ij = cuCadd( cuCadd( cuCadd( mkCMPLX( 1, 0 ),
 						cuCmul( beta_s, mkCMPLX( 2 * ( 1 / Square( hx_d ) + 1 / Square( hy_d ) ), 0 ) ) ),

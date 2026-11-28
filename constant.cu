@@ -1,4 +1,4 @@
-#pragma once  // ヘッダファイルにはこれを書く
+#pragma once  // include guard for header file
 
 #ifndef __SCHRO_CONSTANT__
 #define __SCHRO_CONSTANT__
@@ -13,7 +13,7 @@
 const REAL pi = 3.1415926535897932384626433832795028841971693993751;
 
 
-// 文字列の空白を取り除く
+// remove whitespace from string
 std::string trim(std::string str)
 {	std::stringstream ss(str);
 	std::string s;
@@ -29,16 +29,16 @@ T read_value(
 	std::map<std::string,std::string>& param_list)
 {	typedef std::map<std::string,std::string> list_type;
 
-	// 読み込んだパラメータリストにあるか探す
+	// search in the loaded parameter list
 	const list_type::iterator itr=param_list.find(name);
 	if(itr!=param_list.end()) {
-		// 適切な型に変換して代入
+		// convert to appropriate type and assign
 		std::string str = itr->second;
 		std::stringstream ss(str);
 		ss >> var;
 	}
 	else {
-		// リストになければNaNにしておく(整数の場合は0)
+		// set to NaN if not in list (0 for integers)
 		var = std::numeric_limits<T>::quiet_NaN();
 		std::cout << "Error: Parameter is not found in file" << std::endl;
 	}
@@ -51,27 +51,27 @@ read_parameter_list(std::string filename)
 	std::ifstream ifs(filename.c_str());
 	std::map<string,string> parameter_list;
 	while(ifs) {
-		// 一行読み込み
+		// read one line
 		string line;
 		std::getline(ifs, line);
 
-		// # 以下はコメント扱いとして消去
+		// strip comments starting with #
 		string::size_type pos=line.find("#");
 		if(pos!=string::npos) {
 			line.erase(line.begin()+pos,line.end());
 		}
 
-		// "="で分割
+		// split by "="
 		std::stringstream ss(line);
 		string first, second;
 		std::getline(ss, first,'=');
 		std::getline(ss,second,'=');
 
-		// 単語前後のスペースを除去
+		// trim leading and trailing spaces
 		first = trim(first);
 		second= trim(second);
 
-		// 取得結果を保存
+		// store parsed result
 		if(!first.empty() && !second.empty()) {
 			parameter_list[first] = second;
 		}
@@ -83,12 +83,12 @@ bool read_parameter(std::string filename,
 		int& N_rec, int& N_rec_rho, int& N_step, REAL& hx, REAL& hy, REAL& Lx, REAL& Ly,
 		REAL& omg, REAL& v0x, REAL& v0y, REAL& Bz, REAL& m, REAL& q, REAL& x0, REAL& y0,
 		REAL& vSIZE, REAL& v0_, REAL& Bz_, REAL& mp_, REAL& e_, REAL& h_bar_)
-{	// 定数読み込み
+{	// read constants
 	std::map<std::string,std::string>
 		parameter_list = read_parameter_list(filename);
 	if(parameter_list.empty())return false;
 
-	// (READ_VALUEは宣言していない変数を使うとエラーとなる)
+	// (READ_VALUE causes a compile error if an undeclared variable is used)
 	READ_VALUE(N_rec	 ,parameter_list);
 	READ_VALUE(N_rec_rho ,parameter_list);
 	READ_VALUE(N_step	 ,parameter_list);

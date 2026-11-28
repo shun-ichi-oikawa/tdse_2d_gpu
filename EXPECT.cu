@@ -1,7 +1,7 @@
-#pragma once  // ヘッダファイルにはこれを書く
+#pragma once  // include guard for header file
 
 void EXPECT ( CMPLX *psi, REAL *x, REAL *y,
-#ifdef FieldParticle
+#if defined(FieldParticle) || defined(StaticDebye) || defined(DynamicDebye)
 	REAL *u,
 #endif
 	CMPLX *mvx_av,  CMPLX *mvy_av,  CMPLX *Px   , CMPLX *Py    , REAL       *E, CMPLX *var_mv,
@@ -40,13 +40,13 @@ void EXPECT ( CMPLX *psi, REAL *x, REAL *y,
 				Py_av = Py_av + psi_cj * dpsi_dy;
 				Px2av = Px2av + psi_cj * dpsi2dx;
 				Py2av = Py2av + psi_cj * dpsi2dy;
-				qA ( x_ij, y_ij, Bz, q, &qAx, &qAy );	// qAy == 0が来ているはず
+				qA ( x_ij, y_ij, Bz, q, &qAx, &qAy );	// qAy == 0 is expected
 				*qAx_av +=         qAx   * rho_ij;
-				*qAy_av +=         qAy   * rho_ij;	// == 0のはず
+				*qAy_av +=         qAy   * rho_ij;	// expected to be 0
 				qAx2av  += Square( qAx ) * rho_ij;
-				qAy2av  += Square( qAy ) * rho_ij;	// == 0のはず
+				qAy2av  += Square( qAy ) * rho_ij;	// expected to be 0
 				qAxPx_av = qAxPx_av + psi_cj * ( qAx * dpsi_dx );
-				qAyPy_av = qAyPy_av + psi_cj * ( qAy * dpsi_dy );	// == 0のはず
+				qAyPy_av = qAyPy_av + psi_cj * ( qAy * dpsi_dy );	// expected to be 0
 			#else
 				rho_ij = Square( cuCabs( psi[II] ) );
 				psi_cj = cuConj(         psi[II]   );
@@ -54,15 +54,15 @@ void EXPECT ( CMPLX *psi, REAL *x, REAL *y,
 				Py_av  = cuCadd( Py_av, cuCmul( psi_cj, dpsi_dy ) );
 				Px2av  = cuCadd( Px2av, cuCmul( psi_cj, dpsi2dx ) );
 				Py2av  = cuCadd( Py2av, cuCmul( psi_cj, dpsi2dy ) );
-				qA ( x_ij, y_ij, Bz, q, &qAx, &qAy );	// qAy == 0が来ているはず
+				qA ( x_ij, y_ij, Bz, q, &qAx, &qAy );	// qAy == 0 is expected
 				*qAx_av +=         qAx   * rho_ij;
-				 qAy_av +=         qAy   * rho_ij;	// == 0のはず
+				 qAy_av +=         qAy   * rho_ij;	// expected to be 0
 				qAx2av +=  Square( qAx ) * rho_ij;
-				qAy2av +=  Square( qAy ) * rho_ij;	// == 0のはず
+				qAy2av +=  Square( qAy ) * rho_ij;	// expected to be 0
 				qAxPx_av = cuCadd( qAxPx_av, cuCmul( psi_cj, cuCmul( mkCMPLX(qAx,0), dpsi_dx )));
-				qAyPy_av = cuCadd( qAyPy_av, cuCmul( psi_cj, cuCmul( mkCMPLX(qAy,0), dpsi_dy )));	// == 0のはず
+				qAyPy_av = cuCadd( qAyPy_av, cuCmul( psi_cj, cuCmul( mkCMPLX(qAy,0), dpsi_dy )));	// expected to be 0
 			#endif
-			#ifndef FieldParticle
+			#if !defined(FieldParticle) && !defined(StaticDebye) && !defined(DynamicDebye)
 				U_av += potential( x_ij, y_ij, q ) * rho_ij;
 			#else
 				U_av +=                   u[II] * rho_ij;
@@ -93,14 +93,14 @@ void EXPECT ( CMPLX *psi, REAL *x, REAL *y,
 		CMPLX I = {0, 1};
 	//	CMPLX I = make_doublecomplex(0, 1);
 	//	CMPLX I = make_REALcomplex(0, 1);
-		Px_av = - h_bar * hh * I * Px_av;	// 運動の恒量for H = H( y, \vec v)
+		Px_av = - h_bar * hh * I * Px_av;	// constant of motion for H = H( y, \vec v)
 		Py_av = - h_bar * hh * I * Py_av;
 		Px2av = - h_bar * h_bar * hh * Px2av;
 		Py2av = - h_bar * h_bar * hh * Py2av;
 		qAxPx_av = hh * qAxPx_av;
 		qAyPy_av = hh * qAyPy_av;
 	#else
-		Px_av  = cuCmul( mkCMPLX( 0, - h_bar * hh ), Px_av );	// 運動の恒量for H = H( y, \vec v)
+		Px_av  = cuCmul( mkCMPLX( 0, - h_bar * hh ), Px_av );	// constant of motion for H = H( y, \vec v)
 		Py_av  = cuCmul( mkCMPLX( 0, - h_bar * hh ), Py_av );
 		Px2av  = cuCmul( mkCMPLX( - h_bar * h_bar * hh, 0 ), Px2av );
 		Py2av  = cuCmul( mkCMPLX( - h_bar * h_bar * hh, 0 ), Py2av );
@@ -126,8 +126,8 @@ void EXPECT ( CMPLX *psi, REAL *x, REAL *y,
 	#ifdef CUDACOMPLEX_H
 		*mvx_av = Px_av - *qAx_av;
 		*mvy_av = Py_av -  qAy_av;
-		 mvx2av = Px2av + qAx2av + 2 * h_bar * I * qAxPx_av;	//	Axがxの関数でないため、単純に2乗を展開した形
-		 mvy2av = Py2av + qAy2av + 2 * h_bar * I * qAyPy_av;	//	同上
+		 mvx2av = Px2av + qAx2av + 2 * h_bar * I * qAxPx_av;	//	simply expanded square since Ax is independent of x
+		 mvy2av = Py2av + qAy2av + 2 * h_bar * I * qAyPy_av;	//	same as above
 		 mv2av  = mvx2av + mvy2av;
 		*var_mvx= mvx2av       	- ( *mvx_av * *mvx_av );
 		*var_mvy= mvy2av       	- ( *mvy_av * *mvy_av ); 

@@ -1,4 +1,4 @@
-#pragma once  // ヘッダファイルにはこれを書く
+#pragma once  // include guard for header file
 
 __device__ __host__ void FDM (int II, CMPLX *psi, REAL hx, REAL hy, int Nx2,
 	CMPLX *dpsi_dx, CMPLX *dpsi_dy, CMPLX *d2psi_dx2, CMPLX *d2psi_dy2 )
